@@ -6,6 +6,10 @@ import 'package:html/dom.dart';
 
 abstract class BaseSite {
   String siteName;
+  List<Book> books =[];
+  int selectedBookIndex = -1;
+  List<Chapter> chapters=[];
+  List<String> chapterContents =[];
 
   Future<List<Book>> getBooks(String searchInfo, {Function updateCallBack});
 
@@ -35,10 +39,6 @@ class IqishuSite extends BaseSite {
   final String siteUrl = 'http://www.iqishu.la';
   final String encoding = 'utf-8';
   final String searchUrl = 'http://www.iqishu.la/search.html?searchkey=';
-
-  List<Book> books = [];
-  Book selectedBook;
-  List<Chapter> chapters = [];
 
   Future<List<Book>> getBooks(String searchInfo,
       {Function updateCallBack}) async {
