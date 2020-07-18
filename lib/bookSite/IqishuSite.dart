@@ -4,35 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart';
 
-abstract class BaseSite {
-  String siteName;
-  List<Book> books =[];
-  int selectedBookIndex = -1;
-  List<Chapter> chapters=[];
-  List<String> chapterContents =[];
-
-  Future<List<Book>> getBooks(String searchInfo, {Function updateCallBack});
-
-  Future<List<Chapter>> getChapters(Book book, {Function updateCallBack});
-
-  Future<String> getChapterContent(Chapter chapter, {Function updateCallBack});
-
-  void myPrint() => print('123');
-}
-
-class Book {
-  BaseSite site;
-  String name, author, url;
-
-  Book(this.site, this.name, this.author, this.url);
-}
-
-class Chapter {
-  BaseSite site;
-  String title, url;
-
-  Chapter(this.site, this.title, this.url);
-}
+import 'BaseSite.dart';
 
 class IqishuSite extends BaseSite {
   final String siteName = '奇书网';
@@ -40,15 +12,17 @@ class IqishuSite extends BaseSite {
   final String encoding = 'utf-8';
   final String searchUrl = 'http://www.iqishu.la/search.html?searchkey=';
 
-  Future<List<Book>> getBooks(String searchInfo,
-      {Function updateCallBack}) async {
+  Future<List<Book>> getBooks(String searchInfo, {Function callback}) async {
     books.clear();
     try {
       var url = Uri.encodeFull(searchUrl + searchInfo); //等价于python的parse.quote
       var r = await http.get(url);
       var doc = parse(utf8.decode(r.bodyBytes)); //utf8转码为字符串
       var trTags = doc.querySelectorAll("tr");
-      if (trTags.length <= 1) return books;
+      if (trTags.length <= 1) {
+        if (callback != null) callback(books);
+        return books;
+      }
 
       for (int i = 1; i < trTags.length; i++) {
         //第一个tr为表头，跳过
@@ -65,14 +39,11 @@ class IqishuSite extends BaseSite {
     } catch (e) {
       print(e);
     }
-    if (updateCallBack != null) {
-      updateCallBack(books);
-    }
+    if (callback != null) callback(books);
     return books;
   }
 
-  Future<List<Chapter>> getChapters(Book book,
-      {Function updateCallBack}) async {
+  Future<List<Chapter>> getChapters(Book book, {Function callback}) async {
     chapters.clear();
     try {
       var r1 = await http.get(book.url);
@@ -95,14 +66,13 @@ class IqishuSite extends BaseSite {
     } catch (e) {
       print(e);
     }
-    if (updateCallBack != null) {
-      updateCallBack(chapters);
+    if (callback != null) {
+      callback(chapters);
     }
     return chapters;
   }
 
-  Future<String> getChapterContent(Chapter chapter,
-      {Function updateCallBack}) async {
+  Future<String> getChapterContent(Chapter chapter, {Function callback}) async {
     String content = '';
     try {
       var r = await http.get(chapter.url);
@@ -115,8 +85,8 @@ class IqishuSite extends BaseSite {
     } catch (e) {
       print(e);
     }
-    if (updateCallBack != null) {
-      updateCallBack(content);
+    if (callback != null) {
+      callback(content);
     }
     return content;
   }
