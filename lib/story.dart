@@ -19,7 +19,6 @@ class Story {
   Book selectedBook;
   List<Chapter> chapters = [];
 
-//  String saveFileName = "";
   Isolate isolate;
 
   void registerSite(BaseSite site) {
@@ -87,6 +86,10 @@ class Story {
   }
 
   static void _downloadBookIsolate(SendPort sendPort1) async {
+    int startTime = DateTime.now().millisecondsSinceEpoch;
+    num usedTimes() =>
+        (DateTime.now().millisecondsSinceEpoch - startTime) / 1000;
+
     // STEP1 发送sendPort给调用程序，便于传递参数
     final receivePort2 = ReceivePort();
     final sendPort2 = receivePort2.sendPort;
@@ -113,7 +116,7 @@ class Story {
 
     // STEP4 获取章节信息
     var chapters = await site.getChapters(selectedBook);
-    sendPort1.send('共${chapters.length}个章节,请稍候...');
+    sendPort1.send('共${chapters.length}个章节,请稍候...,已耗时:${usedTimes()}秒');
 
     // STEP5 根据chapter的URL下载内容
     contents = List(chapters.length);
@@ -129,29 +132,25 @@ class Story {
     while (true) {
       //循环检查进度，注意不能使用阻塞的sleep函数等待
       await Future.delayed(Duration(seconds: 1), () {
-        sendPort1.send('${completedCountList[0]}/${chapters.length}完成');
+        sendPort1.send(
+            '${completedCountList[0]}/${chapters.length}完成，已耗时:${usedTimes()}秒');
       });
       if (completedCountList[0] == chapters.length) break;
     }
-    int end = DateTime.now().millisecondsSinceEpoch;
-    print('下载耗时: ${end - start}');
-    sendPort1.send('下载${chapters.length}个章节，耗时${(end - start) / 1000}秒');
+    sendPort1.send('下载${chapters.length}个章节，已耗时:${usedTimes()}秒');
 
     // STEP6 保存为文件
-    //sendPort1.send('开始写入文件');
-    int start2 = DateTime.now().millisecondsSinceEpoch;
-    var fileName =
-        '${selectedBook.name}-${selectedBook.author}-${site.siteName}.txt';
-    File f = File('$directory/$fileName');
+    sendPort1.send('开始写入文件,已耗时:${usedTimes()}秒');
+    selectedBook.saveFileName =
+        '$directory/${selectedBook.name}-${selectedBook.author}-${site.siteName}.txt';
+    File f = File(selectedBook.saveFileName);
     IOSink isk = f.openWrite(mode: FileMode.writeOnly);
     for (int i = 0; i < chapters.length; i++) {
       isk.writeln(chapters[i].title);
       isk.writeln(contents[i]);
     }
     await await isk.close();
-    int end2 = DateTime.now().millisecondsSinceEpoch;
-    print('写文件耗时: ${end2 - start2}');
-    sendPort1.send('写文件耗时${(end2 - start2) / 1000}秒，文件名:$fileName');
+    sendPort1.send('写入文件名:${selectedBook.saveFileName}，已耗时:${usedTimes()}秒');
 
     // STEP7 回传book信息
     sendPort1.send(selectedBook);

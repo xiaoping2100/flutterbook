@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:ext_storage/ext_storage.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:open_file/open_file.dart';
 
 import 'story.dart';
 import 'bookSite/BaseSite.dart';
@@ -35,7 +37,7 @@ class MyHomePage extends StatefulWidget {
     // 申请存储权限
     if (!await Permission.storage.isGranted) {
       Map<Permission, PermissionStatus> statuses =
-      await [Permission.storage].request();
+          await [Permission.storage].request();
       print(statuses[Permission.storage]);
     }
   }
@@ -44,7 +46,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List <String> booksInfo = List();
+  List<String> booksInfo = List();
   Function searchButtonFunc; //查询按钮的函数，null时未disable状态
   Function downloadButtonFunc; //下载按钮的函数，null时未disable状态
   var searchStateInfo = '查询状态';
@@ -69,7 +71,6 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     searchStateInfo = '查询完成，共${books.length}本书籍';
     setState(() {});
-    print('updateBooks complete');
   }
 
   void searchButtonPressed() {
@@ -80,7 +81,6 @@ class _MyHomePageState extends State<MyHomePage> {
     searchStateInfo = '查询开始,请稍候...';
     setState(() {});
     story.fetchBooks(searchInfoController.text, updateBooks);
-    print('searchButtonPressed complete');
   }
 
   void updateDownloadState(String info) {
@@ -89,7 +89,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void downloadAsyncButtonPressed() async{
+  void downloadAsyncButtonPressed() async {
     assert(selectBookInfo.isNotEmpty);
     String directory = await ExtStorage.getExternalStoragePublicDirectory(
         ExtStorage.DIRECTORY_DOWNLOADS);
@@ -132,7 +132,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     decoration: InputDecoration(hintText: '书名或用户名'),
                     onChanged: (text) {
                       searchButtonFunc =
-                      text.isEmpty ? null : searchButtonPressed;
+                          text.isEmpty ? null : searchButtonPressed;
                       searchStateInfo = '查询状态';
                       setState(() {});
                     },
@@ -164,16 +164,31 @@ class _MyHomePageState extends State<MyHomePage> {
                 itemCount: booksInfo.length, // 数据长度
               ),
             ),
-            Text(selectBookInfo.isEmpty ? '未选择小说' : '选择小说为:$selectBookInfo'),
+            Row(children: [
+              Expanded(
+                  child: Text(selectBookInfo.isEmpty
+                      ? '未选择小说'
+                      : '选择小说为:$selectBookInfo')),
+              RaisedButton(
+                onPressed: downloadButtonFunc,
+                child: Text('下载'),
+              )
+            ]),
             Row(
               children: [
-                RaisedButton(
-                  onPressed: downloadButtonFunc,
-                  child: Text('下载'),
-                ),
                 Expanded(child: Text(downloadStateInfo)),
+                RaisedButton(
+                  onPressed: (story.selectedBook)?.saveFileName == null
+                      ? null
+                      : () {
+                          var file = story.selectedBook.saveFileName;
+//                    var file = '/storage/emulated/0/Download/秀色田园-某某宝-奇书网.txt';
+                          OpenFile.open(file);
+                        },
+                  child: Text('打开'),
+                ),
               ],
-            )
+            ),
           ],
         ),
       ),

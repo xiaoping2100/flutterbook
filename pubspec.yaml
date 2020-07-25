@@ -28,7 +28,8 @@ dependencies:
   path_provider:
   ext_storage:
   permission_handler:
-
+  intent:
+  open_file:
 
 
   # The following adds the Cupertino Icons font to your application.
