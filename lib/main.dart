@@ -83,10 +83,13 @@ class _MyHomePageState extends State<MyHomePage> {
     story.fetchBooks(searchInfoController.text, updateBooks);
   }
 
-  void updateDownloadState(String info) {
-    setState(() {
-      downloadStateInfo = info;
-    });
+  void updateDownloadState([String info]) {
+    if (info == null)
+      setState(() {});
+    else
+      setState(() {
+        downloadStateInfo = info;
+      });
   }
 
   void downloadAsyncButtonPressed() async {
@@ -106,8 +109,9 @@ class _MyHomePageState extends State<MyHomePage> {
       onTap: () {
         setState(() {
           selectBookInfo = titleItem;
-          story.choiceBook(int.parse(selectBookInfo.split(' ')[0]));
-          downloadStateInfo = '下载状态';
+          story.selectedIndex = int.parse(selectBookInfo.split(' ')[0]);
+          downloadStateInfo =
+              (story.books[story.selectedIndex].saveFileName) ?? '下载状态';
           downloadButtonFunc = downloadAsyncButtonPressed;
         });
       },
@@ -178,11 +182,13 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 Expanded(child: Text(downloadStateInfo)),
                 RaisedButton(
-                  onPressed: (story.selectedBook)?.saveFileName == null
+                  onPressed: (story.selectedIndex == null ||
+                          story.books[story.selectedIndex].saveFileName == null)
                       ? null
                       : () {
-                          var file = story.selectedBook.saveFileName;
-//                    var file = '/storage/emulated/0/Download/秀色田园-某某宝-奇书网.txt';
+                          var file =
+                              story.books[story.selectedIndex].saveFileName;
+//                        var file = '/storage/emulated/0/Download/秀色田园-某某宝-奇书网.txt';
                           OpenFile.open(file);
                         },
                   child: Text('打开'),

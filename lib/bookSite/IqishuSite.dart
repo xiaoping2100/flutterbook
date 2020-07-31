@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart';
@@ -27,9 +29,14 @@ class IqishuSite extends BaseSite {
       for (int i = 1; i < trTags.length; i++) {
         //第一个tr为表头，跳过
         var tdTags = trTags[i].querySelectorAll('td');
-        var bookName = tdTags[1].querySelector('a').text.trim();
+        var bookName = tdTags[1]
+            .querySelector('a')
+            .text
+            .trim();
         var bookUrl =
-            siteUrl + tdTags[1].querySelector('a').attributes["href"].trim();
+            siteUrl + tdTags[1]
+                .querySelector('a')
+                .attributes["href"].trim();
         var bookAuthor = tdTags[2].text.trim();
 //          rights[i].querySelectorAll(".info>span")[1].text.trim(),
 //          rights[i].querySelector(".last>a").attributes["href"].trim(), //href 属性值，最后一章的Url
@@ -60,11 +67,15 @@ class IqishuSite extends BaseSite {
           .querySelectorAll('div#info>div.pc_list')[1]
           .querySelectorAll('ul>li');
       items.forEach((item) {
-        chapters.add(Chapter(this, item.querySelector('a').text,
-            realUrl + item.querySelector('a').attributes['href']));
+        chapters.add(Chapter(this, item
+            .querySelector('a')
+            .text,
+            realUrl + item
+                .querySelector('a')
+                .attributes['href']));
       });
     } catch (e) {
-      print(e);
+      print('getChapters:$e');
     }
     if (callback != null) {
       callback(chapters);
@@ -73,21 +84,15 @@ class IqishuSite extends BaseSite {
   }
 
   Future<String> getChapterContent(Chapter chapter, {Function callback}) async {
-    String content = '';
-    try {
-      var r = await http.get(chapter.url);
-      var doc = parse(utf8.decode(r.bodyBytes));
-      var item = doc.querySelector('div#content1');
-      item.querySelectorAll('p.sitetext').forEach((subItem) {
-        subItem.remove();
-      });
-      content = item.text.trim();
-    } catch (e) {
-      print(e);
-    }
-    if (callback != null) {
-      callback(content);
-    }
+    var r = await http.get(chapter.url);
+    var doc = parse(utf8.decode(r.bodyBytes));
+    var item = doc.querySelector('div#content1');
+    item.querySelectorAll('p.sitetext').forEach((subItem) {
+      subItem.remove();
+    });
+    String content = item.text.trim();
+    chapter.content = content;
+    if (callback != null) callback(content);
     return content;
   }
 }

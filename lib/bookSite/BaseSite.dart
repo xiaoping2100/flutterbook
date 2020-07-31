@@ -1,9 +1,7 @@
 abstract class BaseSite {
   String siteName;
   List<Book> books =[];
-  int selectedBookIndex = -1;
   List<Chapter> chapters=[];
-  List<String> chapterContents =[];
 
   Future<List<Book>> getBooks(String searchInfo, {Function callback});
 
@@ -15,13 +13,14 @@ abstract class BaseSite {
 class Book {
   BaseSite site;
   String name, author, url;
+  String saveFileName;
 
   Book(this.site, this.name, this.author, this.url);
 }
 
 class Chapter {
   BaseSite site;
-  String title, url;
+  String title, url, content;
 
   Chapter(this.site, this.title, this.url);
 }
